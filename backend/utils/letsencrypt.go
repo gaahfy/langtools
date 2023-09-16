@@ -19,7 +19,7 @@ func ServeLetsEncryptIfAvailable(w http.ResponseWriter, r *http.Request) (bool) 
 	filePath := currentDir + "/letsencrypt" + r.URL.Path
 	fileInfo, err := os.Stat(filePath)
 	if err == nil {
-		absolutePath := fileInfo.Name()
+		absolutePath := filepath.Join(currentDir + "/letsencrypt", fileInfo.Name())
 		if strings.HasPrefix(absolutePath, currentDir) {
 			fileServer := http.FileServer(http.Dir(currentDir + "/letsencrypt"))
 			fileServer.ServeHTTP(w, r)
