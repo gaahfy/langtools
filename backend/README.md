@@ -1,40 +1,54 @@
-# Langtools backend
+# Langtools Backend
 
-## How to run the backend service locally
+## How to Run the Backend Service Locally
 
-### Build the server
+### Build the Server
 
 ```shell
 go build server.go
 ```
 
-### Run the server
+### Run the Server
 
 ```shell
-LANGTOOLS_BACKEND_PORT=":8080" ./server
+LANGTOOLS_BACKEND_HTTP_PORT=":8080" ./server
 ```
 
-Alternatively, `LANGTOOLS_BACKEND_PORT` can be set as an environment variable of
-the host.
+Alternatively, you can set `LANGTOOLS_BACKEND_HTTP_PORT`` as an environment
+variable on the host.
 
-## How to deploy the backend service
+## How to Deploy the Backend Service
+
+For this section, we will assume that you are using a Debian server with an
+amd64 architecture on AWS EC2.
+
+Please adapt the following instructions to match your configuration. Key
+assumptions are as follows:
+
+* username is `admin`
+* the system utilizes `systemd`
+* the domain name is `api.langtools.org`
+
+Feel free to modify these details in the following instructions.
 
 ### Initial Setup
 
-For this part, we will assume that you are running on an amd64 server which has
-systemd on it.
+#### Initialize Daemon
 
-First, let's create a bash script which will run the server:
+First, let's create a Bash script to run the server:
 
 ```shell
-cat >> /home/admin/server.sh << EOF
+cat > /home/admin/server.sh << EOF
 #!/usr/bin/env bash
 
-LANGTOOLS_BACKEND_PORT=":80" /home/admin/server
+LANGTOOLS_BACKEND_HTTP_PORT=":80" \\
+LANGTOOLS_BACKEND_HTTPS_PORT=":443" \\
+LANGTOOLS_BACKEND_DOMAIN_NAME="api.langtools.org" \\
+LANGTOOLS_BACKEND_IS_PRODUCTION="yes" /home/admin/server
 EOF
 ```
 
-Make sure the bash script can be executed:
+Ensure that the Bash script is executable:
 
 ```shell
 chmod +x /home/admin/server.sh
@@ -48,7 +62,7 @@ sudo nano /etc/systemd/system/langtools-backend.service
 
 ```
 [Unit]
-Description=Backend server for langtools
+Description=Backend server for Langtools
 After=multi-user.target
 
 [Service]
@@ -72,28 +86,74 @@ Enable your service:
 sudo systemctl enable langtools-backend.service
 ```
 
-### Update
+#### Initial Launch (SSL Setup)
 
-Stop the running service :
+First, build the server and upload it to your running server:
+
+```shell
+GOOS=linux GOARCH=amd64 go build server.go
+scp -i private-cert.pem ./server admin@server-ip:/home/admin/server
+```
+
+Then, open two SSH consoles on your server:
+
+In the first one, create a folder named `letsencrypt` in `/home/admin`:
+
+```shell
+mkdir -p /home/admin/letsencrypt
+```
+
+In the second console, start the server without HTTPS:
+
+```shell
+LANGTOOLS_BACKEND_HTTP_PORT=":80" /home/admin/server
+```
+
+In the first console, install Certbot:
+
+```shell
+sudo apt install -y certbot
+```
+
+Next, use Certbot to generate the certificate:
+
+```shell
+sudo certbot certonly --webroot
+```
+
+Enter your domain name when prompted, and for the webroot, use the following
+path: `/home/admin/letsencrypt`.
+
+You can now return to the second console and press `Ctrl+C` to stop the server.
+
+Run the following command to start the full server with HTTPS:
+
+```shell
+sudo systemctl start langtools-backend.service
+```
+
+### Updating
+
+Stop the running service:
 
 ```shell
 sudo systemctl stop langtools-backend.service
 ```
 
-Remove the previous version of the server
+Remove the previous version of the server:
 
 ```shell
 rm /home/admin/server
 ```
 
-Leave the console, and run the following commands on your local machine
+Exit the console, and run the following commands on your local machine:
 
-```
+```shell
 GOOS=linux GOARCH=amd64 go build server.go
 scp -i private-cert.pem ./server admin@server-ip:/home/admin/server
 ```
 
-Go back to the console in ssh, then run the following command:
+Return to the SSH console and run the following command:
 
 ```shell
 sudo systemctl start langtools-backend.service
