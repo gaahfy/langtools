@@ -3,18 +3,28 @@ package utils
 import (
 	"os"
     "net/http"
+	"path/filepath"
+	"strings"
 )
 
 func ServeLetsEncryptIfAvailable(w http.ResponseWriter, r *http.Request) (bool) {
 	if r.URL.Path == "" || r.URL.Path == "/" {
 		return false
 	}
-	filePath := "./letsencrypt" + r.URL.Path
-	_, err := os.Stat(filePath)
+	currentExecutable, err := os.Executable()
+    if err != nil {
+        return false
+    }
+	currentDir := filepath.Dir(currentExecutable)
+	filePath := currentDir + "/letsencrypt" + r.URL.Path
+	fileInfo, err := os.Stat(filePath)
 	if err == nil {
-        fileServer := http.FileServer(http.Dir("./letsencrypt"))
-        fileServer.ServeHTTP(w, r)
-		return true
+		absolutePath := fileInfo.Name()
+		if strings.HasPrefix(absolutePath, currentDir) {
+			fileServer := http.FileServer(http.Dir(currentDir + "/letsencrypt"))
+			fileServer.ServeHTTP(w, r)
+			return true
+		}
 	}
 	return false
 }
