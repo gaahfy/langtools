@@ -8,6 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.21.1'
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
