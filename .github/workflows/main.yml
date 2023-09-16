@@ -37,4 +37,4 @@ jobs:
           scp ./langtools/backend/server production:/home/admin
       - name: Switch up server in production
         run: |
-          ssh production 'sudo systemctl stop langtools-backend.service'
+          ssh production 'sudo systemctl start langtools-backend.service'
