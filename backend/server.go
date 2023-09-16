@@ -8,7 +8,7 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Langtools updated %s!", r.URL.Path[1:])
+    fmt.Fprintf(w, "Langtools updated after bug %s!", r.URL.Path[1:])
 }
 
 func main() {
