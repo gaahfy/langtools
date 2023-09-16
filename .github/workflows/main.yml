@@ -1,0 +1,40 @@
+name: CI
+on:
+  push:
+    branches: main
+jobs:
+  deploy:
+    name: "Deploy backend to production"
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRODUCTION_BACKEND_SSH_KEY }}" > ~/.ssh/production.key
+          chmod 600 ~/.ssh/production.key
+          cat >>~/.ssh/config <<END
+          Host production
+            HostName ${{ secrets.PRODUCTION_BACKEND_SSH_HOST }}
+            User ${{ secrets.PRODUCTION_BACKEND_SSH_USER }}
+            IdentityFile ~/.ssh/production.key
+            StrictHostKeyChecking no
+          END
+      - name: Git clone locally
+        run: |
+          git clone https://github.com/gaahfy/langtools
+      - name: Build Server locally
+        run: |
+          cd langtools/backend && GOOS=linux GOARCH=amd64 go build server.go
+      - name: Switch down server in production
+        run: |
+          ssh production 'sudo systemctl stop langtools-backend.service'
+      - name: Remove current version of the server in production
+        run: |
+          ssh production 'touch /home/admin/server && rm /home/admin/server'
+      - name: Move version of the server built locally to production
+        run: |
+          scp ./langtools/backend/server production:/home/admin
+      - name: Switch up server in production
+        run: |
+          ssh production 'sudo systemctl stop langtools-backend.service'
