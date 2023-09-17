@@ -44,6 +44,11 @@ cat > /home/admin/server.sh << EOF
 LANGTOOLS_BACKEND_HTTP_PORT=":80" \\
 LANGTOOLS_BACKEND_HTTPS_PORT=":443" \\
 LANGTOOLS_BACKEND_DOMAIN_NAME="api.langtools.org" \\
+LANGTOOLS_SQL_HOST="sql.langtools.org" \\
+LANGTOOLS_SQL_PORT="5432" \\
+LANGTOOLS_SQL_USERNAME="langtools_user" \\
+LANGTOOLS_SQL_PASSWORD="langtools_password" \\
+LANGTOOLS_SQL_DATABASE="langtools" \\
 LANGTOOLS_BACKEND_IS_PRODUCTION="yes" /home/admin/server
 EOF
 ```
@@ -158,3 +163,6 @@ Return to the SSH console and run the following command:
 ```shell
 sudo systemctl start langtools-backend.service
 ```
+
+**_PLEASE BE AWARE THAT THIS CONFIGURATION IS NOT SECURE, AN ISSUE WILL MAKE IT
+MORE SECURE ONCE DONE_**
