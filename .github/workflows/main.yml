@@ -10,8 +10,8 @@ jobs:
     steps:
       - name: Update and upgrade host
         run: |
-          apt update
-          apt install -y postgresql-client
+          sudo apt update
+          sudo apt install -y postgresql-client
       - name: Git clone locally
         run: |
           git clone https://github.com/gaahfy/langtools
