@@ -4,14 +4,14 @@ import (
     "encoding/json"
     "fmt"
     "log"
-	"os"
     "path/filepath"
     "net/http"
     "github.com/gaahfy/langtools/backend/utils"
+    "github.com/gaahfy/langtools/backend/config"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	domainName := os.Getenv("LANGTOOLS_BACKEND_DOMAIN_NAME")
+	domainName := config.DomainName()
     if(r.Host != domainName) {
         httpsURL := "https://" + domainName + r.URL.String()
         http.Redirect(w, r, httpsURL, http.StatusMovedPermanently)
@@ -35,7 +35,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func redirectToHTTPS(w http.ResponseWriter, r *http.Request) {
-	domainName := os.Getenv("LANGTOOLS_BACKEND_DOMAIN_NAME")
+	domainName := config.DomainName()
     if(utils.ServeLetsEncryptIfAvailable(w, r)) {
         return
     }
@@ -44,12 +44,13 @@ func redirectToHTTPS(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    portHTTP := os.Getenv("LANGTOOLS_BACKEND_HTTP_PORT")
-	portHTTPS := os.Getenv("LANGTOOLS_BACKEND_HTTPS_PORT")
-	domainName := os.Getenv("LANGTOOLS_BACKEND_DOMAIN_NAME")
-	isProduction := os.Getenv("LANGTOOLS_BACKEND_IS_PRODUCTION")
+    config.InitDB()
 
-    if isProduction == "yes" {
+    portHTTP := config.HttpPort()
+	portHTTPS := config.HttpsPort()
+	domainName := config.DomainName()
+
+    if config.IsProduction() {
         go http.ListenAndServe(portHTTP, http.HandlerFunc(redirectToHTTPS))
 
 		// Configuration du serveur HTTPS

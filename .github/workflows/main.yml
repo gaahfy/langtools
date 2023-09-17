@@ -3,6 +3,26 @@ on:
   push:
     branches: main
 jobs:
+  sql:
+    name: "Update database in production"
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Update and upgrade host
+        run: |
+          apt update
+          apt install -y postgresql-client
+      - name: Git clone locally
+        run: |
+          git clone https://github.com/gaahfy/langtools
+      - name: Create .pgpass file
+        run: |
+          cat > ~/.pgpass << EOF
+            ${{ secrets.PRODUCTION_SQL_HOST }}:${{ secrets.PRODUCTION_SQL_PORT }}:${{ secrets.PRODUCTION_SQL_DATABASE }}:${{ secrets.PRODUCTION_SQL_USERNAME }}:${{ secrets.PRODUCTION_SQL_PASSWORD }}
+          EOF
+      - name: Update database in production
+        run: |
+          psql -U ${{ secrets.PRODUCTION_SQL_USERNAME }} -d ${{ secrets.PRODUCTION_SQL_DATABASE }} -h ${{ secrets.PRODUCTION_SQL_HOST }} -p ${{ secrets.PRODUCTION_SQL_PORT }} -a -q -f ~/langtools/sql/update.sql
   deploy:
     name: "Deploy backend to production"
     runs-on: ubuntu-latest
@@ -16,13 +36,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.PRODUCTION_BACKEND_SSH_KEY }}" > ~/.ssh/production.key
           chmod 600 ~/.ssh/production.key
-          cat >>~/.ssh/config <<END
+          cat > ~/.ssh/config << EOF
           Host production
             HostName ${{ secrets.PRODUCTION_BACKEND_SSH_HOST }}
             User ${{ secrets.PRODUCTION_BACKEND_SSH_USER }}
             IdentityFile ~/.ssh/production.key
             StrictHostKeyChecking no
-          END
+          EOF
       - name: Git clone locally
         run: |
           git clone https://github.com/gaahfy/langtools
