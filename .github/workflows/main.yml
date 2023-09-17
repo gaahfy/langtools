@@ -17,7 +17,7 @@ jobs:
           git clone https://github.com/gaahfy/langtools
       - name: Update database in production
         run: |
-          PGPASSWORD="${{ secrets.PRODUCTION_SQL_PASSWORD }}" psql -U ${{ secrets.PRODUCTION_SQL_USERNAME }} -d ${{ secrets.PRODUCTION_SQL_DATABASE }} -h ${{ secrets.PRODUCTION_SQL_HOST }} -p ${{ secrets.PRODUCTION_SQL_PORT }} -a -q -f ~/langtools/sql/update.sql
+          PGPASSWORD="${{ secrets.PRODUCTION_SQL_PASSWORD }}" psql -U ${{ secrets.PRODUCTION_SQL_USERNAME }} -d ${{ secrets.PRODUCTION_SQL_DATABASE }} -h ${{ secrets.PRODUCTION_SQL_HOST }} -p ${{ secrets.PRODUCTION_SQL_PORT }} -a -q -f langtools/sql/update.sql
   deploy:
     name: "Deploy backend to production"
     runs-on: ubuntu-latest
